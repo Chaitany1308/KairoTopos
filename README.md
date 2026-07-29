@@ -1,2 +1,2 @@
 # SmartHire
-AI Driven Recruitment & Talent Assessment Platform
+AI-Driven Recruitment & Talent Assessment Platform
