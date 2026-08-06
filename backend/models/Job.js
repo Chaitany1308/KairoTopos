@@ -32,7 +32,7 @@ const jobSchema = new mongoose.Schema({
   },
 
   specialisation : {
-    type : String,
+    type : [String],
     required : true
   },
 

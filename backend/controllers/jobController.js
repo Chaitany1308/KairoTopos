@@ -1,5 +1,6 @@
 const jobs = require("../data/jobs");
 const Job = require("../models/Job");
+const AppError = require("../utils/AppError");
 
 const getAllJobs = async (req , res , next) => {
     try{ 
@@ -15,9 +16,7 @@ const getJobById = async (req,res,next) => {
     try{ 
     const job = await Job.findById(req.params.jobId);
     if(!job){
-        return res.status(404).json({
-            message : "Job not found"
-        });
+        return next(new AppError("Job not found" , 404));
     }
     res.status(200).json(job);
 }
@@ -45,13 +44,12 @@ const updateJob = async (req , res , next) => {
         req.body,
         {
             new : true,
+            runValidators : true
         }
 
     );
      if (!updatedJob) {
-            return res.status(404).json({
-                message: "Job not found"
-            });
+            return next(new AppError("Job not found" , 404));
         }
 
         res.status(200).json(updatedJob); 
@@ -70,9 +68,7 @@ const deleteJob = async (req, res, next) => {
         );
 
         if (!deletedJob) {
-            return res.status(404).json({
-                message: "Job not found"
-            });
+            return next(new AppError("Job not found" , 404));
         }
 
         return res.status(200).json(deletedJob);
