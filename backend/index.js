@@ -8,6 +8,8 @@ const app = express();
 
 const jobRouter = require("./routes/jobRoutes");
 
+const companyRoutes = require("./routes/companyRoutes");
+
 const connectDB = require("./config/db");
 
 require("dotenv").config();
@@ -17,6 +19,8 @@ const errorHandler = require("./middlewares/errorHandler");
 app.use(express.json());
 
 app.use("/jobs", jobRouter);
+
+app.use("/companies", companyRoutes);
 
 app.get("/", (req,res)=>{
     res.send("Welcome to SmartHire Backend!");
