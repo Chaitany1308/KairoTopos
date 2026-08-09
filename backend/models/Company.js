@@ -20,11 +20,13 @@ const companySchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      match: /^https?:\/\/.+/,
     },
 
     logo: {
       type: String,
       trim: true,
+      match: /^https?:\/\/.+/,
     },
 
     industry: {
@@ -76,7 +78,6 @@ const companySchema = new mongoose.Schema(
 
       state: {
         type: String,
-        required: true,
         trim: true,
       },
 
