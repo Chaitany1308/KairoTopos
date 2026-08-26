@@ -3,7 +3,7 @@
 const express = require("express");  
 
 // imported express ka application create kar rhe hai
-// till now, we have imported express from node_modulus, now we have made our SmartHire app
+// till now, we have imported express from node_modulus, now we have made our KairoTopos app
 const app = express();  
 
 const jobRouter = require("./routes/jobRoutes");
@@ -23,7 +23,7 @@ app.use("/jobs", jobRouter);
 app.use("/companies", companyRoutes);
 
 app.get("/", (req,res)=>{
-    res.send("Welcome to SmartHire Backend!");
+    res.send("Welcome to KairoTopos Backend!");
 });
 
 app.use(errorHandler);
@@ -31,7 +31,7 @@ app.use(errorHandler);
 connectDB();
 
 app.listen(process.env.PORT , ()=> {
-    console.log("SmartHire Backend Running...");
+    console.log("KairoTopos Backend Running...");
 });
 
 app.get("/health" , (req,res)=>{
