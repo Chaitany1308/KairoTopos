@@ -10,6 +10,8 @@ const jobRouter = require("./routes/jobRoutes");
 
 const companyRoutes = require("./routes/companyRoutes");
 
+const hrRoutes = require("./routes/hrRoutes");
+
 const connectDB = require("./config/db");
 
 require("dotenv").config();
@@ -21,6 +23,8 @@ app.use(express.json());
 app.use("/jobs", jobRouter);
 
 app.use("/companies", companyRoutes);
+
+app.use("/hr", hrRoutes);
 
 app.get("/", (req,res)=>{
     res.send("Welcome to KairoTopos Backend!");
