@@ -2,6 +2,7 @@ const HR = require("../models/HR");
 const AppError = require("../utils/AppError");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const createHR = async (req, res, next) => {
     try {
@@ -12,7 +13,15 @@ const createHR = async (req, res, next) => {
         if (existingHR) {
             return next(new AppError("HR already exists", 409));
         }
-        const newHR = await HR.create(req.body);
+        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const verificationTokenExpires = new Date(
+    Date.now() + 24 * 60 * 60 * 1000
+);
+        const newHR = await HR.create({
+    ...req.body,
+    verificationToken: verificationToken,
+    verificationTokenExpires: verificationTokenExpires
+});
 
         res.status(201).json({
             success: true,
@@ -147,6 +156,37 @@ const deleteHR = async (req, res, next) => {
     }
 };
 
+const verifyEmail = async (req, res, next) => {
+    try {
+     
+      const hr = await HR.findOne({
+    verificationToken: req.params.token
+});
+
+if (!hr) {
+    return next(new AppError("Invalid verification token", 404));
+}
+
+if (Date.now() > hr.verificationTokenExpires) {
+    return next(
+        new AppError("Verification token has expired", 400)
+    );
+}
+hr.isEmailVerified = true;
+hr.verificationToken = null;
+hr.verificationTokenExpires = null;
+
+await hr.save();
+res.status(200).json({
+    success: true,
+    message: "Email verification successful",
+});
+
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     createHR,
     loginHR,
@@ -154,4 +194,5 @@ module.exports = {
     getHRById,
     updateHR,
     deleteHR,
+    verifyEmail,
 };
