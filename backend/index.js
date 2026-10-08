@@ -50,7 +50,4 @@ app.get("/profile",(req,res)=>{
     res.send("Candidate profile");
 });
 
-app.get("/hr",(req,res)=>{
-    res.send("HR Dashboard");
-});
 

@@ -40,7 +40,18 @@ const loginHR = async (req, res, next) => {
         const hr = await HR.findOne({ email }).select("+password");
 
         if (!hr) {
-            return next(new AppError("Invalid email or password", 401));
+            return next(
+                new AppError("Invalid email or password", 401)
+            );
+        }
+
+        if (!hr.isEmailVerified) {
+            return next(
+                new AppError(
+                    "Please verify your email before logging in",
+                    401
+                )
+            );
         }
 
         const isPasswordCorrect = await bcrypt.compare(
@@ -49,30 +60,33 @@ const loginHR = async (req, res, next) => {
         );
 
         if (!isPasswordCorrect) {
-            return next(new AppError("Invalid email or password", 401));
+            return next(
+                new AppError("Invalid email or password", 401)
+            );
         }
 
         const token = jwt.sign(
-    {
-        id: hr._id,
-        role: hr.role,
-    },
-    process.env.JWT_SECRET,
-    {
-        expiresIn: "1d",
-    }
-);
+            {
+                id: hr._id,
+                role: hr.role,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "1d",
+            }
+        );
 
         res.status(200).json({
             success: true,
             message: "Login successful",
-            token : token
+            token: token,
         });
 
     } catch (err) {
         next(err);
     }
 };
+
 
 const getAllHRs = async (req, res, next) => {
     try {
