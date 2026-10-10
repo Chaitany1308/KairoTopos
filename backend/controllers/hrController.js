@@ -3,6 +3,7 @@ const AppError = require("../utils/AppError");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 const createHR = async (req, res, next) => {
     try {
@@ -17,10 +18,11 @@ const createHR = async (req, res, next) => {
         const verificationTokenExpires = new Date(
     Date.now() + 24 * 60 * 60 * 1000
 );
-        const newHR = await HR.create({
+      const newHR = await HR.create({
     ...req.body,
-    verificationToken: verificationToken,
-    verificationTokenExpires: verificationTokenExpires
+    role: "HR",
+    verificationToken,
+    verificationTokenExpires
 });
 
         res.status(201).json({
@@ -104,6 +106,17 @@ const getAllHRs = async (req, res, next) => {
 
 const getHRById = async (req, res, next) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.hrId)) {
+    return next(new AppError("Invalid HR ID", 400));
+}
+        if (
+    req.user.role !== "ADMIN" &&
+    req.user._id.toString() !== req.params.hrId
+) {
+    return next(
+        new AppError("You can only access your own profile", 403)
+    );
+}
         const hr = await HR.findById(req.params.hrId);
 
         if (!hr) {
@@ -120,17 +133,49 @@ const getHRById = async (req, res, next) => {
     }
 };
 
+
 const updateHR = async (req, res, next) => {
     try {
-        const updateData = { ...req.body };
-
-        if (updateData.password) {
-            updateData.password = await bcrypt.hash(updateData.password, 10);
+        if (!mongoose.Types.ObjectId.isValid(req.params.hrId)) {
+    return next(new AppError("Invalid HR ID", 400));
+}
+        // Step 1: Check ownership or ADMIN permission
+        if (
+            req.user.role !== "ADMIN" &&
+            req.user._id.toString() !== req.params.hrId
+        ) {
+            return next(
+                new AppError(
+                    "You can only update your own profile",
+                    403
+                )
+            );
         }
 
+        // Step 2: Allow only approved profile fields
+        const allowedFields = ["name", "designation", "company"];
+        const updateData = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updateData[field] = req.body[field];
+            }
+        }
+
+        // Step 3: Reject requests with no permitted fields
+        if (Object.keys(updateData).length === 0) {
+            return next(
+                new AppError(
+                    "No valid profile fields provided",
+                    400
+                )
+            );
+        }
+
+        // Step 4: Update the HR document
         const updatedHR = await HR.findByIdAndUpdate(
             req.params.hrId,
-            updateData,
+            { $set: updateData },
             {
                 new: true,
                 runValidators: true,
@@ -150,8 +195,12 @@ const updateHR = async (req, res, next) => {
         next(err);
     }
 };
+
 const deleteHR = async (req, res, next) => {
     try {
+          if (!mongoose.Types.ObjectId.isValid(req.params.hrId)) {
+            return next(new AppError("Invalid HR ID", 400));
+        }
         const deletedHR = await HR.findByIdAndDelete(
             req.params.hrId
         );

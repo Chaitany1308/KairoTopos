@@ -1,5 +1,5 @@
 const express = require("express");
-const protect = require("../middlewares/authMiddleware");
+const { protect, restrictTo } = require("../middlewares/authMiddleware");
 
 const {
     createHR,
@@ -14,11 +14,11 @@ const {
 const router = express.Router();
 
 router.post("/", createHR);
-router.get("/", protect, getAllHRs);
+router.get("/", protect, restrictTo("ADMIN"), getAllHRs);
 router.post("/login", loginHR);
-router.get("/:hrId", getHRById);
-router.put("/:hrId", updateHR);
-router.delete("/:hrId", deleteHR);
+router.get("/:hrId", protect, getHRById);
+router.put("/:hrId", protect, updateHR);
+router.delete("/:hrId", protect, restrictTo("ADMIN"), deleteHR);
 router.get("/verify-email/:token", verifyEmail);
 
 module.exports = router;

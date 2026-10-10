@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const AppError = require("../utils/AppError");
 const HR = require("../models/HR");
+const mongoose = require("mongoose");
 
 const protect = async (req, res, next) => {
     try {
@@ -30,6 +31,10 @@ const protect = async (req, res, next) => {
             token,
             process.env.JWT_SECRET
         );
+        
+        if (!decoded.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {
+    return next(new AppError("Invalid or expired token", 401));
+}
 
         // Find HR in database
         const hr = await HR.findById(decoded.id);
@@ -43,13 +48,38 @@ const protect = async (req, res, next) => {
 
         // Attach authenticated HR to request
         req.user = hr;
-
         next();
 
-    } catch (err) {
-        next(err);
+    } 
+    catch (err) {
+    if (
+        err.name === "JsonWebTokenError" ||
+        err.name === "TokenExpiredError"
+    ) {
+        return next(
+            new AppError("Invalid or expired token", 401)
+        );
     }
+
+    next(err);
+}
 };
 
 
-module.exports = protect;
+const restrictTo = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return next(
+                new AppError("You do not have permission", 403)
+            );
+        }
+
+        next();
+    };
+};
+
+
+module.exports = {
+    protect,
+    restrictTo,
+};
